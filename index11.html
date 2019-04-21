@@ -15,10 +15,13 @@
 		.btn:hover{
 			color: #0d65f7;
 		}
+		[v-cloak]{
+		    display: none;
+		}
 	</style>
 </head>
 <body>
-	<div id="app">
+	<div id="app" v-cloak>
 		<p>数据：</p>
 		<textarea v-model="data" placeholder="请粘贴要解析数据"></textarea>
 		<p>
