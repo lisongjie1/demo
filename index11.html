@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style>
+		textarea{
+			width: 80%;
+			height: 200px;
+			padding: 20px;
+			outline: none;
+		}
+		.btn{cursor: pointer;}
+		.btn:hover{
+			color: #0d65f7;
+		}
+	</style>
+</head>
+<body>
+	<div id="app">
+		<p>数据：</p>
+		<textarea v-model="data" placeholder="请粘贴要解析数据"></textarea>
+		<p>
+			<span @click="getData" class="btn">点击获取数据</span>
+		</p>
+		<table>
+			<tr>
+				<th>年份</th>
+				<th>总和</th>
+				<th>平均股价</th>
+				<th>总股本</th>
+				<th>总市值</th>
+				<th>净利润</th>
+				<th>市盈率</th>
+			</tr>
+			<tr v-for="(item, index) in list">
+				<td>{{item.key}}年</td>
+				<td>{{item.value.toFixed(2)}}</td>
+				<td>{{(item.value/12).toFixed(2)}}</td>
+				<td>
+					<input type="text" v-model="allEquity" @input="getTotalVal"/>
+				</td>
+				<td>{{item.totalVal}}</td>
+				<td>
+					<input type="text" v-model="item.profits" @input="getPeRatio(item)"/>
+				</td>
+				<td>{{item.peRatio}}</td>
+			</tr>
+		</table>
+	</div>
+	<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+	<script>
+		var app = new Vue({
+		  el: '#app',
+		  data: function () {
+		  	return {
+		  		data: '',
+		    	list: [],
+		    	allEquity:'',
+		  	}
+		  },
+		  computed:{
+			getTotalVal(item){
+				console.log(item)
+				var allEquity = this.allEquity
+				if (allEquity !== "") {
+					return (allEquity * item.value/12).toFixed(2)
+				} else {
+					return ''
+				}
+			}
+		  },
+		  methods: {
+		  	getData() {
+				// 市盈率 = 每个月的股价相加 / 12月 * 总股本
+				var data = this.data
+				var list = JSON.parse(data).data;
+				var arr = [];
+				list.map(item => {
+				    var obj = {};
+				    var el = item.split(',')
+				    obj = {
+				        time: el[0],
+				        start: el[1],
+				        end: el[2],
+				        sums: el[0].substr(0,4)
+				    }
+				    arr.push(obj)
+				})
+
+				// 统计每年每个月的收盘价格
+				var obj1 = {};
+				arr.map(item => {
+				    if (obj1[item.sums]) {
+				        obj1[item.sums] =parseFloat(obj1[item.sums]) + parseFloat(item.end)
+				    } else {
+				        obj1[item.sums] = item.end
+				    }
+				})
+				this.list = [];
+				Object.keys(obj1).map(key => {
+					this.list.push({
+						key: key,
+						value: obj1[key],
+				    	allEquity: '', // 总股本
+				    	totalVal: '',// 总市值,
+				    	profits: '', // 净利润
+				    	peRatio: ''// 市盈率
+					})
+				})
+			},
+			getTotalVal(){
+				this.list.map(item => {
+					item.totalVal = (this.allEquity * item.value/12).toFixed(2)
+				})
+			},
+			getPeRatio(item){
+				item.peRatio = (item.totalVal / item.profits).toFixed(2)
+			}
+		  }
+		})
+		
+	</script>
+</body>
+</html>
