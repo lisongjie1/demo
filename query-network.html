@@ -32,9 +32,9 @@
                 default:
                     networkType = 'other';
             }
-            alert(networkStr)
             return networkStr;
         }
+        document.querySelectorAll('div').text = 'Network: ' + getNetworkType()
     </script>
 </body>
 </html>
