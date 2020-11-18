@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    html,body{width: 100%;height: 100%}
+    #container {width:100%; height: 100%; 
+        position: fixed;}
+
+    #panel {
+        position: fixed;
+        background-color: white;
+        max-height: 100%;
+        overflow-y: auto;
+        top: 0px;
+        right: 0px;
+        width: 180px;
+        border-bottom: solid 1px silver;
+    }
+    .amap_lib_placeSearch .poibox{
+      padding: 5px 10px;
+    }
+    .amap-pl-pc .poi-img{
+      display: none;
+    }
+  </style>
+  
+</head>
+<body>
+  <div id="container"></div> 
+  <div id="panel"></div>
+  <script type="text/javascript" src="https://webapi.amap.com/maps?v=1.4.15&key=5c5a5be9efa56f8a1a9ea7aa0dbf65bf"></script>
+  <script type="text/javascript">
+    // 初始化
+    var mapObj = new AMap.Map('container', {
+      resizeEnable: true,
+      zoom: 17  //地图级数
+    })
+    // 定位插件
+    mapObj.plugin('AMap.Geolocation', function () {
+      geolocation = new AMap.Geolocation({
+          enableHighAccuracy: true,//是否使用高精度定位，默认:true
+          timeout: 10000,          //超过10秒后停止定位，默认：无穷大
+          maximumAge: 0,           //定位结果缓存0毫秒，默认：0
+          convert: true,           //自动偏移坐标，偏移后的坐标为高德坐标，默认：true
+          showButton: true,        //显示定位按钮，默认：true
+          buttonPosition: 'LB',    //定位按钮停靠位置，默认：'LB'，左下角
+          buttonOffset: new AMap.Pixel(10, 20),//定位按钮与设置的停靠位置的偏移量，默认：Pixel(10, 20)
+          showMarker: true,        //定位成功后在定位到的位置显示点标记，默认：true
+          showCircle: true,        //定位成功后用圆圈表示定位精度范围，默认：true
+          panToLocation: true,     //定位成功后将定位到的位置作为地图中心点，默认：true
+          zoomToAccuracy:true      //定位成功后调整地图视野范围使定位位置及精度范围视野内可见，默认：false
+      });
+      mapObj.addControl(geolocation);
+      geolocation.getCurrentPosition();
+      AMap.event.addListener(geolocation, 'complete', searchAround);//返回定位信息
+      // AMap.event.addListener(geolocation, 'error', () => {});      //返回定位出错信息
+    })
+    // 缩放插件
+    AMap.plugin("AMap.ToolBar", function () {
+        //异步加载插件
+        var toolbar = new AMap.ToolBar();
+        mapObj.addControl(toolbar);
+    });
+
+    // 周边搜索
+    function searchAround (data) {
+      let {position: {lng, lat}} = data;
+      console.log(lng, lat)
+        AMap.service(["AMap.PlaceSearch"], function() {
+            //构造地点查询类
+            var placeSearch = new AMap.PlaceSearch({ 
+                type: 'KTV', // 兴趣点类别
+                pageSize: 3, // 单页显示结果条数
+                pageIndex: 1, // 页码
+                city: "289", // 兴趣点城市
+                citylimit: true,  //是否强制限制在设置的城市内搜索
+                map: mapObj, // 展现结果的地图实例
+                panel: "panel", // 结果列表将在此容器中进行展示。
+                autoFitView: true // 是否自动调整地图视野使绘制的 Marker点都处于视口的可见范围
+            });
+            var cpoint = [lng, lat]; //中心点坐标
+
+            // cpoint这个为中心点，200为半径 进行搜索
+            placeSearch.searchNearBy('', cpoint, 200, function(status, result) {
+              if (status === 'complete' && result.info === 'OK') {
+                //TODO : 解析返回结果,如果设置了map和panel，api将帮助完成点标注和列表
+                  console.log("建议城市名称:"+result.poiList.pois[0].name);
+                  console.log("poi所在省份:"+result.poiList.pois[0].pname);
+                  console.log("行政区编码:"+result.poiList.pois[0].adcode);
+                  console.log("poi所在省份编码:"+result.poiList.pois[0].pcode);
+                  console.log("poi所在城市编码:"+result.poiList.pois[0].citycode);
+                  console.log("电子邮箱:"+result.poiList.pois[0].email);
+                  console.log("邮编:"+result.poiList.pois[0].postcode);
+                  console.log("全局唯一ID:"+result.poiList.pois[0].id);
+                  console.log("poi所在城市名称:"+result.poiList.pois[0].cityname);
+                  console.log("poi所在行政区名称:"+result.poiList.pois[0].adname);
+                  console.log("地址:"+result.poiList.pois[0].address);
+                  console.log("电话:"+result.poiList.pois[0].tel);
+                  console.log("city name:"+result.poiList.pois[0].entr_location);//入口经纬度，POI点有出入口信息时返回，否则返回空字符串
+                  console.log("city name:"+result.poiList.pois[0].exit_location);//出口经纬度，POI点有出入口信息时返回，否则返回空字符串
+                  console.log("兴趣点经纬度:"+result.poiList.pois[0].location);//兴趣点经纬度
+              }
+            });
+        });
+    }
+  </script>
+</body>
+</html>
